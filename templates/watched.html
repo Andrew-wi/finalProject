@@ -5,20 +5,14 @@
 {% endblock %}
 
 {% block main %}
-    <form action="/buy" method="POST">
-        <h1>
-            <p>
-                Successfully purchased! Please proceed to your next purchase.
-            </p>
-        </h1>
-        <div class="form-group">
-            <input autocomplete="off" autofocus class="form-control" name="symbol" placeholder="Stock Symbol" type="text"/>
+    <form action="/watched" method="POST">
+        <div>
+            <iframe width="840" height="630" style="position: absolute; top: 120px; left: 550px;"
+            src="{{ link }}">
+            </iframe>
         </div>
-        <div class="form-group">
-            <input autocomplete="off" autofocus class="form-control" name="shares" placeholder="Number of Shares" type="number"/>
-        </div>
-        <div class="form-group">
-            <button class="btn btn-primary" type="submit">Submit</button>
+        <div>
+            <iframe src="http://deadsimplechat.com/+6TDam" width="300px" height="615px" style="position: absolute; top: 0 px, left: 0px"></iframe>
         </div>
     </form>
 {% endblock %}

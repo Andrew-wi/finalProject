@@ -35,18 +35,23 @@ Session(app)
 db = SQL("sqlite:///finance.db")
 
 
-@app.route("/")
+@app.route("/watch", methods=["GET", "POST"])
 @login_required
 def index():
     """shows the homepage, consisting of an invitation
     to a friend, and then the link you want to watch"""
     if request.method == "POST":
-        if not request.form.get("username"):
-            return apology("please enter a username", 403)
+        if not request.form.get("email"):
+            return apology("please enter your friend's email", 403)
         elif not request.form.get("link"):
             return apology("please enter a link", 403)
-        else:
-            return render_template("watched.html")
+
+        # https://www.youtube.com/watch?v=SxAp27sFaIM
+        oldLink = request.form.get("link")
+        newLink = oldLink[:23] + "/embed/" + oldLink[32:]
+        print(newLink)
+
+        return render_template("watched.html", link=newLink)
     else:
         return render_template("watch.html")
 
@@ -85,9 +90,6 @@ def login():
         rows = db.execute("SELECT * FROM users WHERE username = :username",
                           username=request.form.get("username"))
 
-        print(request.form.get("username"))
-        print(request.form.get("password"))
-
         # Ensure username exists and password is correct
         if len(rows) != 1 or not check_password_hash(rows[0]["hash"], request.form.get("password")):
             return apology("invalid username and/or password", 403)
@@ -96,7 +98,7 @@ def login():
         session["user_id"] = rows[0]["id"]
 
         # Redirect user to home page
-        return redirect("/")
+        return redirect("/watch")
 
     # User reached route via GET (as by clicking a link or via redirect)
     else:
@@ -111,7 +113,7 @@ def logout():
     session.clear()
 
     # Redirect user to login form
-    return redirect("/")
+    return redirect("/login")
 
 
 # @app.route("/friends", methods=["GET", "POST"])
