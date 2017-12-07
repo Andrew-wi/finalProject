@@ -13,6 +13,10 @@ from helpers import apology, login_required
 app = Flask(__name__)
 app.config["DEBUG"] = True
 
+# configure db with sqlalchemy built in flask framework
+db = SQLAlchemy(app)
+
+# configure the database connection (created on pythonanywhere)
 SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostname}/{databasename}".format(
     username="stoneprojectile",
     password="wowsqlawesome",
@@ -30,15 +34,20 @@ def after_request(response):
     response.headers["Pragma"] = "no-cache"
     return response
 
+# model for the database; fairly standard users table
+class User(db.Model):
+
+    __tablename__ = "users"
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+
 # Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_FILE_DIR"] = mkdtemp()
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
-
-# configure db with sqlalchemy built in flask framework
-db = SQLAlchemy(app)
-
 
 @app.route("/watch", methods=["GET", "POST"])
 @login_required
