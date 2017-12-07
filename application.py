@@ -1,4 +1,3 @@
-from cs50 import SQL
 # password for sql database: wowsqlawesome
 from flask import Flask, redirect, render_template, request, session
 from flask_session import Session
@@ -21,7 +20,7 @@ SQLALCHEMY_DATABASE_URI = "mysql+mysqlconnector://{username}:{password}@{hostnam
     username="stoneprojectile",
     password="wowsqlawesome",
     hostname="stoneprojectile.mysql.pythonanywhere-services.com",
-    databasename="stoneprojectile$finance",
+    databasename="stoneprojectile$usher",
 )
 app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
 app.config["SQLALCHEMY_POOL_RECYCLE"] = 299
@@ -42,6 +41,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
+    hash = db.Column(db.String(120), unique=True, nullable=False)
 
 # Configure session to use filesystem (instead of signed cookies)
 app.config["SESSION_FILE_DIR"] = mkdtemp()
@@ -68,11 +68,6 @@ def index():
         return render_template("watched.html", link=newLink)
     else:
         return render_template("watch.html")
-
-# @app.route("/watch", methods=["GET", "POST"])
-# @login_required
-# def watch():
-
 
 
 # @app.route("/history")
@@ -149,17 +144,16 @@ def register():
             return apology("must provide email", 403)
 
         # check database for username
-        rows = db.execute("SELECT * FROM users WHERE username = :username",
-                          username=request.form.get("username"))
+        rows = db.session.query(User.id).filter_by(username=request.form.get("username")).scalar()
 
         # check if username taken
-        if len(rows) > 0:
-            return apology("username already taken", 400)
+        if rows is not None:
+            return apology("username already taken", 403)
 
-        # check if email is taken
-        emailRows = db.execute("SELECT * FROM users WHERE email = :email",
-                               email=request.form.get("email"))
-        if len(emailRows) > 0:
+        # check if email is taken; similar to previous db query
+        emailRows = db.session.query(User.id).filter_by(email=request.form.get("email")).scalar()
+
+        if emailRows is not None:
             return apology("email already taken", 403)
 
         # check for filling out correct password/confirmation fields
@@ -169,11 +163,10 @@ def register():
             return apology("password and confirmation must match", 400)
 
         # hashed_pass = generate_password_hash(request.form.get("confirmation"), method='pbkdf2:sha256', salt_length=8)
-        db.execute("INSERT INTO users (username, hash, email) VALUES (:username, :hashed_pass, :email)",
-                   username=request.form.get("username"),
-                   hashed_pass=generate_password_hash(request.form.get("confirmation"), method='pbkdf2:sha256', salt_length=8),
-                   email=request.form.get("email"))
-        return redirect("/")
+        oneUser = User(username=request.form.get("username"), email=request.form.get("email"), hash=generate_password_hash(request.form.get("confirmation"), method='pbkdf2:sha256', salt_length=8))
+        db.session.add(oneUser)
+        db.session.commit()
+        return redirect("/watch")
     else:
         return render_template("register.html")
 
